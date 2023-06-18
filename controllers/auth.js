@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
 const CreateError = require("../error");
@@ -7,9 +7,9 @@ exports.register = async(req,res,next)=>{
     try{
         const user = await userModel.findOne({email:req.body.email});
         if(user) return next(CreateError(400,"user with this email already exists !"));
-        const salt = await bcrypt.genSalt(10);
-        const hashPassword = await bcrypt.hash(req.body.password,salt)
-        const newUSer = new userModel({...req.body,password:hashPassword})
+        // const salt = await bcrypt.genSalt(10);
+        // const hashPassword = await bcrypt.hash(req.body.password,salt)
+        const newUSer = new userModel({...req.body})
         await newUSer.save()
         res.status(200).json(newUSer);
     }catch(err){
@@ -22,8 +22,7 @@ exports.login = async(req,res,next)=>{
         const user = await userModel.findOne({email:req.body.email})
         if(!user)return next(CreateError(404,"user not found !"))
 
-        iscorrect = await bcrypt.compare(req.body.password, user.password)
-        if(!iscorrect) return next(CreateError(401,"unAuthorized user"))
+        if(req.body.password !== user.password) return next(CreateError(401,"unAuthorized user"))
 
         const token = jwt.sign({
             id:user._id
